@@ -18,7 +18,10 @@
       gesture-detector
     >
       <a-assets>
-        <a-asset-item id="animated-asset" src="assets/animated.glb"></a-asset-item>
+        <a-asset-item
+          id="animated-asset"
+          src="assets/animated.glb"
+        ></a-asset-item>
         <a-asset-item id="static-asset" src="assets/head.glb"></a-asset-item>
       </a-assets>
       <a-marker
@@ -31,7 +34,7 @@
         cursor="fuse: false; rayOrigin: mouse;"
         id="markerA"
       >
-        <!-- <a-entity
+        <a-entity
           id="bowser-model"
           scale="0.3 0.3 0.3"
           animation-mixer="loop: repeat"
@@ -40,11 +43,11 @@
           gesture-handler
           position="0 0 0"
           rotation="-90 0 0"
-        ></a-entity> -->
+        ></a-entity>
         <a-entity
           id="static-model"
           scale="0.3 0.3 0.3"
-          animation-mixer="loop: once"
+          animation-mixer="loop: once; clip: open;"
           gltf-model="#static-asset"
           class="clickable"
           gesture-handler
