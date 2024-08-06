@@ -6,6 +6,26 @@
     <script src="https://raw.githack.com/donmccurdy/aframe-extras/master/dist/aframe-extras.loaders.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
     <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
+    <script>
+      AFRAME.registerComponent("animation-manager", {
+        init: function () {
+          const staticModel = document.querySelector("#static-model");
+          const bowserModel = document.querySelector("#bowser-model");
+
+          staticModel.addEventListener("model-loaded", () => {
+            const staticMixer = staticModel.components["animation-mixer"];
+            staticMixer.playClip("ArmatureAction");
+
+            staticMixer.el.addEventListener("animation-finished", () => {
+              bowserModel.setAttribute("animation-mixer", {
+                clip: "*",
+                loop: "repeat",
+              });
+            });
+          });
+        },
+      });
+    </script>
   </head>
   <body style="margin: 0; overflow: hidden">
     <a-scene
@@ -16,6 +36,7 @@
       id="scene"
       embedded
       gesture-detector
+      animation-manager
     >
       <a-assets>
         <a-asset-item
@@ -24,6 +45,7 @@
         ></a-asset-item>
         <a-asset-item id="static-asset" src="assets/head.glb"></a-asset-item>
       </a-assets>
+
       <a-marker
         id="animated-marker"
         type="pattern"
@@ -37,17 +59,16 @@
         <a-entity
           id="static-model"
           scale="0.3 0.3 0.3"
-          animation-mixer="clip: ArmatureAction; loop: once;"
           gltf-model="#static-asset"
           class="clickable"
           gesture-handler
           position="0 0 0"
           rotation="-90 0 0"
+          animation-mixer="loop: once; clip: ArmatureAction;"
         ></a-entity>
         <a-entity
           id="bowser-model"
           scale="0.3 0.3 0.3"
-          animation-mixer="loop: repeat; enabled: false;"
           gltf-model="#animated-asset"
           class="clickable"
           gesture-handler
@@ -57,32 +78,5 @@
       </a-marker>
       <a-entity camera></a-entity>
     </a-scene>
-
-    <script>
-      AFRAME.registerComponent("animation-sequence", {
-        init: function () {
-          var staticModel = document.querySelector("#static-model");
-          var bowserModel = document.querySelector("#bowser-model");
-
-          // Listen for the animation-finished event on the static model
-          staticModel.addEventListener("animation-finished", function (event) {
-            if (event.detail.action._clip.name === "ArmatureAction") {
-              // Stop the static model's animation and hold the last frame
-              var mixer = staticModel.components["animation-mixer"].mixer;
-              var clipAction = mixer.clipAction("ArmatureAction");
-              clipAction.paused = true;
-              clipAction.time = clipAction.getClip().duration;
-              mixer.update(0);
-
-              // Start the looped animation on the bowser model
-              bowserModel.setAttribute("animation-mixer", "enabled", true);
-            }
-          });
-        },
-      });
-
-      // Attach the animation sequence handler to the scene
-      document.querySelector("a-scene").setAttribute("animation-sequence", "");
-    </script>
   </body>
 </html>
