@@ -47,7 +47,7 @@
         <a-entity
           id="bowser-model"
           scale="0.3 0.3 0.3"
-          animation-mixer="clip: default; loop: repeat; enabled: false"
+          animation-mixer="loop: repeat; enabled: false;"
           gltf-model="#animated-asset"
           class="clickable"
           gesture-handler
@@ -59,7 +59,6 @@
     </a-scene>
 
     <script>
-      // Register a component to handle the animation sequence
       AFRAME.registerComponent("animation-sequence", {
         init: function () {
           var staticModel = document.querySelector("#static-model");
@@ -68,8 +67,15 @@
           // Listen for the animation-finished event on the static model
           staticModel.addEventListener("animation-finished", function (event) {
             if (event.detail.action._clip.name === "ArmatureAction") {
+              // Stop the static model's animation and hold the last frame
+              var mixer = staticModel.components["animation-mixer"].mixer;
+              var clipAction = mixer.clipAction("ArmatureAction");
+              clipAction.paused = true;
+              clipAction.time = clipAction.getClip().duration;
+              mixer.update(0);
+
               // Start the looped animation on the bowser model
-              bowserModel.setAttribute("animation-mixer", "enabled: true");
+              bowserModel.setAttribute("animation-mixer", "enabled", true);
             }
           });
         },
