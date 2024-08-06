@@ -102,13 +102,6 @@
       const DEBUG = !PRODUCTION;
       let animationSequenceStarted = false;
 
-      function setupDebugVisibility() {
-        const debugInfo = document.getElementById("debugInfo");
-        debugInfo.style.display = DEBUG ? "block" : "none";
-      }
-
-      setupDebugVisibility();
-
       function updateDebugInfo(message) {
         if (DEBUG) {
           console.log(message);
