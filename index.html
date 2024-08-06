@@ -13,19 +13,41 @@
       body {
         margin: 0;
         overflow: hidden;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .a-canvas {
+        width: 100% !important;
+        height: 100% !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        z-index: 0 !important;
+      }
+      #overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 999;
+        pointer-events: none;
       }
       #debugInfo {
-        position: fixed;
+        position: absolute;
         top: 10px;
         left: 10px;
         background: rgba(0, 0, 0, 0.5);
         color: white;
         padding: 10px;
         font-family: monospace;
-        z-index: 1000;
+        pointer-events: auto;
       }
       #zombieButton {
-        position: fixed;
+        position: absolute;
         bottom: 20px;
         left: 50%;
         transform: translateX(-50%);
@@ -41,7 +63,7 @@
         letter-spacing: 2px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
-        z-index: 1000;
+        pointer-events: auto;
       }
       #zombieButton:hover {
         background-color: #45a049;
@@ -62,7 +84,7 @@
   <body>
     <a-scene
       vr-mode-ui="enabled: false;"
-      loading-screen="enabled: true;"
+      loading-screen="enabled: false;"
       renderer="logarithmicDepthBuffer: true;"
       arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
       id="scene"
@@ -107,8 +129,10 @@
       </a-marker>
       <a-entity camera></a-entity>
     </a-scene>
-    <div id="debugInfo"></div>
-    <button id="zombieButton">Click for Surprise</button>
+    <div id="overlay">
+      <div id="debugInfo"></div>
+      <button id="zombieButton">Click for Surprise</button>
+    </div>
 
     <script>
       const PRODUCTION = false; // Set this to true for production
