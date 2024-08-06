@@ -189,7 +189,7 @@
             setTimeout(() => {
               updateDebugInfo(`Playing animation: ${clip.name}`);
               var action = mixer.clipAction(clip);
-              action.setLoop(THREE.LoopOnce);
+              action.setLoop(THREE.LoopRepeat);
               action.clampWhenFinished = true;
               action.reset();
               action.play();
