@@ -6,25 +6,6 @@
     <script src="https://raw.githack.com/donmccurdy/aframe-extras/master/dist/aframe-extras.loaders.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
     <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
-    <script>
-      AFRAME.registerComponent("animation-manager", {
-        init: function () {
-          const staticModel = document.querySelector("#static-model");
-          const bowserModel = document.querySelector("#bowser-model");
-
-          staticModel.addEventListener("model-loaded", () => {
-            const staticMixer = staticModel.components["animation-mixer"];
-            staticMixer.playClip("ArmatureAction");
-
-            staticMixer.el.addEventListener("animation-finished", () => {
-              bowserModel.setAttribute("animation-mixer", {
-                loop: "repeat",
-              });
-            });
-          });
-        },
-      });
-    </script>
   </head>
   <body style="margin: 0; overflow: hidden">
     <a-scene
@@ -35,7 +16,6 @@
       id="scene"
       embedded
       gesture-detector
-      animation-manager
     >
       <a-assets>
         <a-asset-item
@@ -44,7 +24,6 @@
         ></a-asset-item>
         <a-asset-item id="static-asset" src="assets/head.glb"></a-asset-item>
       </a-assets>
-
       <a-marker
         id="animated-marker"
         type="pattern"
@@ -58,16 +37,17 @@
         <a-entity
           id="static-model"
           scale="0.3 0.3 0.3"
+          animation-mixer="clip: ArmatureAction; loop: once; enabled: false;"
           gltf-model="#static-asset"
           class="clickable"
           gesture-handler
           position="0 0 0"
           rotation="-90 0 0"
-          animation-mixer="loop: once; clip: ArmatureAction;"
         ></a-entity>
         <a-entity
           id="bowser-model"
           scale="0.3 0.3 0.3"
+          animation-mixer="clip: BandAction; loop: repeat; enabled: false;"
           gltf-model="#animated-asset"
           class="clickable"
           gesture-handler
@@ -77,5 +57,37 @@
       </a-marker>
       <a-entity camera></a-entity>
     </a-scene>
+
+    <script>
+      // Register a component to handle click events and play animations
+      AFRAME.registerComponent("play-on-click", {
+        init: function () {
+          var el = this.el;
+
+          el.addEventListener("click", function () {
+            // Reset the animation before playing
+            var mixer = el.components["animation-mixer"].mixer;
+            var clipAction = mixer.clipAction("ArmatureAction");
+
+            // Reset the animation state and start it
+            clipAction.reset();
+            clipAction.setLoop(THREE.LoopOnce);
+            clipAction.play();
+
+            // Optionally, stop the animation when it finishes to hold the last frame
+            el.addEventListener("animation-finished", function (event) {
+              if (event.detail.action._clip.name === "ArmatureAction") {
+                clipAction.paused = true;
+                clipAction.time = clipAction.getClip().duration;
+                mixer.update(0);
+              }
+            });
+          });
+        },
+      });
+
+      // Attach the play-on-click handler to the static model
+      document.querySelector("#static-model").setAttribute("play-on-click", "");
+    </script>
   </body>
 </html>
