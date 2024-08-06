@@ -59,35 +59,47 @@
     </a-scene>
 
     <script>
-      // Register a component to handle click events and play animations
-      AFRAME.registerComponent("play-on-click", {
+      AFRAME.registerComponent("play-on-screen-click", {
         init: function () {
-          var el = this.el;
+          var staticModel = document.querySelector("#static-model");
+          var bowserModel = document.querySelector("#bowser-model");
+          var sceneEl = this.el;
 
-          el.addEventListener("click", function () {
-            // Reset the animation before playing
-            var mixer = el.components["animation-mixer"].mixer;
+          var playAnimation = function () {
+            // Remove the event listener after the first click
+            sceneEl.removeEventListener("click", playAnimation);
+
+            // Get the mixer and clip action
+            var mixer = staticModel.components["animation-mixer"].mixer;
             var clipAction = mixer.clipAction("ArmatureAction");
 
-            // Reset the animation state and start it
+            // Reset and play the animation
             clipAction.reset();
             clipAction.setLoop(THREE.LoopOnce);
             clipAction.play();
 
-            // Optionally, stop the animation when it finishes to hold the last frame
-            el.addEventListener("animation-finished", function (event) {
-              if (event.detail.action._clip.name === "ArmatureAction") {
-                clipAction.paused = true;
-                clipAction.time = clipAction.getClip().duration;
-                mixer.update(0);
+            // Stop the animation on the last frame
+            staticModel.addEventListener(
+              "animation-finished",
+              function (event) {
+                if (event.detail.action._clip.name === "ArmatureAction") {
+                  clipAction.paused = true;
+                  clipAction.time = clipAction.getClip().duration;
+                  mixer.update(0);
+                }
               }
-            });
-          });
+            );
+          };
+
+          // Add a click event listener to the scene
+          sceneEl.addEventListener("click", playAnimation);
         },
       });
 
-      // Attach the play-on-click handler to the static model
-      document.querySelector("#static-model").setAttribute("play-on-click", "");
+      // Attach the play-on-screen-click component to the scene
+      document
+        .querySelector("a-scene")
+        .setAttribute("play-on-screen-click", "");
     </script>
   </body>
 </html>
