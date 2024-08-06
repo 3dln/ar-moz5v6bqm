@@ -55,51 +55,97 @@
       </a-marker>
       <a-entity camera></a-entity>
     </a-scene>
+    <div
+      id="debugInfo"
+      style="
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        padding: 10px;
+        font-family: monospace;
+      "
+    ></div>
     <script>
-      // Function to add animation-mixer and play the animation
+      function updateDebugInfo(message) {
+        document.getElementById("debugInfo").innerHTML += message + "<br>";
+      }
+
       function addAnimationAndPlay() {
+        updateDebugInfo("Attempting to add animation and play...");
         var el = document.querySelector("#static-model");
 
-        // Check if animation-mixer is already added
+        if (!el) {
+          updateDebugInfo("Error: #static-model not found");
+          return;
+        }
+
+        updateDebugInfo("Model found. Checking for animation-mixer...");
+
         if (!el.hasAttribute("animation-mixer")) {
-          // Add animation-mixer component
+          updateDebugInfo("Adding animation-mixer component...");
           el.setAttribute("animation-mixer", {
             clip: "ArmatureAction",
             loop: "once",
             clampWhenFinished: true,
           });
 
-          // Wait for the next tick to ensure the component is initialized
-          el.addEventListener("loaded", function () {
-            var mixer = el.components["animation-mixer"].mixer;
-            var clipAction = mixer.clipAction("ArmatureAction");
-            clipAction.reset();
-            clipAction.play();
+          el.addEventListener("model-loaded", function () {
+            updateDebugInfo("Model loaded. Attempting to play animation...");
+            playAnimation(el);
           });
         } else {
-          // If animation-mixer is already added, just play the animation
-          var mixer = el.components["animation-mixer"].mixer;
-          var clipAction = mixer.clipAction("ArmatureAction");
-          clipAction.reset();
-          clipAction.play();
+          updateDebugInfo(
+            "Animation-mixer already present. Playing animation..."
+          );
+          playAnimation(el);
         }
       }
 
-      // Add click event listener to the entire document
-      document.addEventListener("click", function (event) {
-        // Check if the AR.js canvas is loaded
-        var arCanvas = document.querySelector(".a-canvas");
-        if (arCanvas) {
-          // Only add animation-mixer and play if the click is on the AR canvas
-          if (event.target === arCanvas) {
-            addAnimationAndPlay();
+      function playAnimation(el) {
+        if (el.components["animation-mixer"]) {
+          var mixer = el.components["animation-mixer"].mixer;
+          if (mixer) {
+            var clipAction = mixer.clipAction("ArmatureAction");
+            if (clipAction) {
+              updateDebugInfo("Animation found. Resetting and playing...");
+              clipAction.reset();
+              clipAction.play();
+            } else {
+              updateDebugInfo("Error: ArmatureAction not found in the model");
+            }
+          } else {
+            updateDebugInfo(
+              "Error: Mixer not found in animation-mixer component"
+            );
           }
         } else {
-          console.log(
-            "AR canvas not found. The AR scene might not be fully loaded."
-          );
+          updateDebugInfo("Error: animation-mixer component not initialized");
+        }
+      }
+
+      document.addEventListener("click", function (event) {
+        updateDebugInfo("Click detected");
+        var arCanvas = document.querySelector(".a-canvas");
+        if (arCanvas) {
+          if (event.target === arCanvas) {
+            updateDebugInfo("Click on AR canvas. Adding animation...");
+            addAnimationAndPlay();
+          } else {
+            updateDebugInfo("Click outside AR canvas");
+          }
+        } else {
+          updateDebugInfo("AR canvas not found. Scene might not be loaded.");
         }
       });
+
+      // Check if the model is already loaded
+      document
+        .querySelector("#static-model")
+        .addEventListener("model-loaded", function () {
+          updateDebugInfo("Model loaded event fired");
+        });
     </script>
   </body>
 </html>
