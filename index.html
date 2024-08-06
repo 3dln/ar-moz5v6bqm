@@ -25,7 +25,7 @@
         left: 0;
         margin: 0; /* Remove default margin */
         padding: 0; /* Remove default padding */
-        transform: none !important; /* Ensure no transformation is applied */
+        transform: scale(1) !important; /* Reset scaling */
         z-index: 0 !important; /* Ensure it stays beneath other elements */
       }
       #overlay {
@@ -85,12 +85,13 @@
   <body>
     <a-scene
       vr-mode-ui="enabled: false;"
-      loading-screen="enabled: false;"
+      loading-screen="enabled: true;"
       renderer="logarithmicDepthBuffer: true;"
       arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
       id="scene"
       embedded
       gesture-detector
+      style="width: 100vw; height: 100vh; overflow: hidden;"
     >
       <a-assets>
         <a-asset-item
