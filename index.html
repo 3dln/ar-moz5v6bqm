@@ -74,7 +74,7 @@
         font-family: monospace;
       "
     ></div>
-    <button
+    <!-- <button
       id="zombieButton"
       style="
         position: fixed;
@@ -96,11 +96,18 @@
       "
     >
       Click for Surprise
-    </button>
+    </button> -->
     <script>
       const PRODUCTION = false;
       const DEBUG = !PRODUCTION;
       let animationSequenceStarted = false;
+
+      function setupDebugVisibility() {
+        const debugInfo = document.getElementById("debugInfo");
+        debugInfo.style.display = DEBUG ? "block" : "none";
+      }
+
+      setupDebugVisibility();
 
       function updateDebugInfo(message) {
         if (DEBUG) {
