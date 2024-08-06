@@ -68,13 +68,17 @@
       "
     ></div>
     <script>
+      let animationSequenceStarted = false;
+
       function updateDebugInfo(message) {
         document.getElementById("debugInfo").innerHTML += message + "<br>";
       }
 
       function addAnimationAndPlay() {
-        document.removeEventListener("click", arguments.callee, false);
-        updateDebugInfo("Attempting to add animation and play...");
+        if (animationSequenceStarted) return;
+        animationSequenceStarted = true;
+
+        updateDebugInfo("Starting animation sequence...");
         var el = document.querySelector("#static-model");
 
         if (!el) {
@@ -82,57 +86,57 @@
           return;
         }
 
-        updateDebugInfo("Model found. Checking for animation-mixer...");
-
         if (!el.hasAttribute("animation-mixer")) {
-          updateDebugInfo("Adding animation-mixer component...");
           el.setAttribute("animation-mixer", {
             clip: "ArmatureAction",
             loop: "once",
             clampWhenFinished: true,
           });
+        }
 
-          el.addEventListener("model-loaded", function () {
-            updateDebugInfo("Model loaded. Attempting to play animation...");
-            playAnimation(el);
-          });
-        } else {
-          updateDebugInfo(
-            "Animation-mixer already present. Playing animation..."
-          );
+        el.addEventListener("model-loaded", function modelLoadedHandler() {
+          el.removeEventListener("model-loaded", modelLoadedHandler);
+          playAnimation(el);
+        });
+
+        if (el.components["gltf-model"].model) {
           playAnimation(el);
         }
       }
 
       function playAnimation(el) {
-        if (el.components["animation-mixer"]) {
-          var mixer = el.components["animation-mixer"].mixer;
-          if (mixer) {
-            var clipAction = mixer.clipAction("ArmatureAction");
-            if (clipAction) {
-              updateDebugInfo("Animation found. Resetting and playing...");
-              clipAction.reset();
-              clipAction.play();
+        var mixer = el.components["animation-mixer"].mixer;
+        if (mixer) {
+          var clipAction = mixer.clipAction("ArmatureAction");
+          if (clipAction) {
+            updateDebugInfo("Playing ArmatureAction...");
+            clipAction.reset();
+            clipAction.setLoop(THREE.LoopOnce);
+            clipAction.clampWhenFinished = true;
+            clipAction.play();
 
-              // Set up the event listener for the end of the animation
-              el.addEventListener("animation-finished", function (event) {
+            el.addEventListener(
+              "animation-finished",
+              function animationFinishedHandler(event) {
+                el.removeEventListener(
+                  "animation-finished",
+                  animationFinishedHandler
+                );
                 if (event.detail.action._clip.name === "ArmatureAction") {
                   updateDebugInfo(
-                    "First animation finished. Starting BrainInside animation..."
+                    "ArmatureAction finished. Starting BrainInside animation..."
                   );
                   animateBrainInside();
                 }
-              });
-            } else {
-              updateDebugInfo("Error: ArmatureAction not found in the model");
-            }
-          } else {
-            updateDebugInfo(
-              "Error: Mixer not found in animation-mixer component"
+              }
             );
+          } else {
+            updateDebugInfo("Error: ArmatureAction not found in the model");
           }
         } else {
-          updateDebugInfo("Error: animation-mixer component not initialized");
+          updateDebugInfo(
+            "Error: Mixer not found in animation-mixer component"
+          );
         }
       }
 
@@ -141,15 +145,11 @@
         var brainInside = bowserModel.object3D.getObjectByName("BrainInside");
 
         if (brainInside) {
-          updateDebugInfo("BrainInside found. Starting animation...");
-
-          // Store the initial position
+          updateDebugInfo("Animating BrainInside...");
           var initialY = brainInside.position.y;
-
-          // Animate the BrainInside moving up
           var startTime = Date.now();
-          var duration = 1000; // 1 second duration
-          var animationDistance = 0.1; // Distance to move up
+          var duration = 1000;
+          var animationDistance = 0.1;
 
           function animateUp() {
             var now = Date.now();
@@ -160,7 +160,10 @@
               requestAnimationFrame(animateUp);
             } else {
               brainInside.position.y = initialY + animationDistance;
-              updateDebugInfo("BrainInside animation completed.");
+              updateDebugInfo(
+                "BrainInside animation completed. Starting animated-asset animations..."
+              );
+              playAllAnimationsOnAnimatedAsset();
             }
           }
 
@@ -170,16 +173,61 @@
         }
       }
 
-      document.addEventListener("click", function (event) {
-        updateDebugInfo("Click detected");
-        addAnimationAndPlay();
-      });
+      function playAllAnimationsOnAnimatedAsset() {
+        var animatedModel = document.querySelector("#bowser-model");
+        if (!animatedModel.hasAttribute("animation-mixer")) {
+          animatedModel.setAttribute("animation-mixer", "");
+        }
 
-      // Check if the model is already loaded
+        var mixer = animatedModel.components["animation-mixer"].mixer;
+        if (mixer) {
+          var animations =
+            animatedModel.components["gltf-model"].model.animations;
+          var totalDuration = 0;
+
+          animations.forEach((clip, index) => {
+            setTimeout(() => {
+              updateDebugInfo(`Playing animation: ${clip.name}`);
+              var action = mixer.clipAction(clip);
+              action.setLoop(THREE.LoopOnce);
+              action.clampWhenFinished = true;
+              action.reset();
+              action.play();
+            }, totalDuration * 1000);
+
+            totalDuration += clip.duration;
+          });
+
+          setTimeout(() => {
+            updateDebugInfo("All animations completed.");
+          }, totalDuration * 1000);
+        } else {
+          updateDebugInfo("Error: Mixer not found for animated-asset");
+        }
+      }
+
+      function onClickHandler() {
+        if (!animationSequenceStarted) {
+          updateDebugInfo("Click detected. Starting animation sequence...");
+          addAnimationAndPlay();
+          document.removeEventListener("click", onClickHandler);
+        }
+      }
+
+      document.addEventListener("click", onClickHandler);
+
       document
         .querySelector("#static-model")
-        .addEventListener("model-loaded", function () {
-          updateDebugInfo("Model loaded");
+        .addEventListener("model-loaded", function modelLoadedHandler() {
+          updateDebugInfo("Static model loaded");
+          this.removeEventListener("model-loaded", modelLoadedHandler);
+        });
+
+      document
+        .querySelector("#bowser-model")
+        .addEventListener("model-loaded", function modelLoadedHandler() {
+          updateDebugInfo("Animated model loaded");
+          this.removeEventListener("model-loaded", modelLoadedHandler);
         });
     </script>
   </body>
