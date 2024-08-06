@@ -127,17 +127,7 @@
 
       document.addEventListener("click", function (event) {
         updateDebugInfo("Click detected");
-        var arCanvas = document.querySelector(".a-canvas");
-        if (arCanvas) {
-          if (event.target === arCanvas) {
-            updateDebugInfo("Click on AR canvas. Adding animation...");
-            addAnimationAndPlay();
-          } else {
-            updateDebugInfo("Click outside AR canvas");
-          }
-        } else {
-          updateDebugInfo("AR canvas not found. Scene might not be loaded.");
-        }
+        addAnimationAndPlay();
       });
 
       // Check if the model is already loaded
