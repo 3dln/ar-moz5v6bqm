@@ -113,6 +113,16 @@
               updateDebugInfo("Animation found. Resetting and playing...");
               clipAction.reset();
               clipAction.play();
+
+              // Set up the event listener for the end of the animation
+              el.addEventListener("animation-finished", function (event) {
+                if (event.detail.action._clip.name === "ArmatureAction") {
+                  updateDebugInfo(
+                    "First animation finished. Starting BrainInside animation..."
+                  );
+                  animateBrainInside();
+                }
+              });
             } else {
               updateDebugInfo("Error: ArmatureAction not found in the model");
             }
@@ -123,6 +133,40 @@
           }
         } else {
           updateDebugInfo("Error: animation-mixer component not initialized");
+        }
+      }
+
+      function animateBrainInside() {
+        var bowserModel = document.querySelector("#bowser-model");
+        var brainInside = bowserModel.object3D.getObjectByName("BrainInside");
+
+        if (brainInside) {
+          updateDebugInfo("BrainInside found. Starting animation...");
+
+          // Store the initial position
+          var initialY = brainInside.position.y;
+
+          // Animate the BrainInside moving up
+          var startTime = Date.now();
+          var duration = 1000; // 1 second duration
+          var animationDistance = 0.1; // Distance to move up
+
+          function animateUp() {
+            var now = Date.now();
+            var progress = (now - startTime) / duration;
+
+            if (progress < 1) {
+              brainInside.position.y = initialY + progress * animationDistance;
+              requestAnimationFrame(animateUp);
+            } else {
+              brainInside.position.y = initialY + animationDistance;
+              updateDebugInfo("BrainInside animation completed.");
+            }
+          }
+
+          animateUp();
+        } else {
+          updateDebugInfo("Error: BrainInside object not found");
         }
       }
 
