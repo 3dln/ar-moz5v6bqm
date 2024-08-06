@@ -73,6 +73,7 @@
       }
 
       function addAnimationAndPlay() {
+        document.removeEventListener("click", arguments.callee, false);
         updateDebugInfo("Attempting to add animation and play...");
         var el = document.querySelector("#static-model");
 
@@ -134,7 +135,7 @@
       document
         .querySelector("#static-model")
         .addEventListener("model-loaded", function () {
-          updateDebugInfo("Model loaded event fired");
+          updateDebugInfo("Model loaded");
         });
     </script>
   </body>
