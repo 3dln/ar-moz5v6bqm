@@ -164,6 +164,8 @@
           );
         }
       }
+      let bandFinalPosition;
+
       function animateBrainInside() {
         var bowserModel = document.querySelector("#bowser-model");
         var brainInside = bowserModel.object3D.getObjectByName("BrainInside");
@@ -183,11 +185,15 @@
               brainInside.position.y = initialY + progress * animationDistance;
               requestAnimationFrame(animateUp);
             } else {
-              brainInside.position.y = initialY + animationDistance;
+              bandFinalPosition = new THREE.Vector3(
+                brainInside.position.x,
+                initialY + animationDistance,
+                brainInside.position.z
+              );
               updateDebugInfo(
                 "BrainInside animation completed. Starting animated-asset animations..."
               );
-              playAllAnimationsOnAnimatedAsset(brainInside.position.y);
+              playAllAnimationsOnAnimatedAsset();
             }
           }
 
@@ -197,7 +203,7 @@
         }
       }
 
-      function playAllAnimationsOnAnimatedAsset(finalY) {
+      function playAllAnimationsOnAnimatedAsset() {
         var animatedModel = document.querySelector("#bowser-model");
         if (!animatedModel.hasAttribute("animation-mixer")) {
           animatedModel.setAttribute("animation-mixer", "");
@@ -213,19 +219,6 @@
             setTimeout(() => {
               updateDebugInfo(`Playing animation: ${clip.name}`);
               var action = mixer.clipAction(clip);
-
-              // Modify the animation to keep the BrainInside at the final Y position
-              if (clip.name.includes("BrainInside")) {
-                var originalUpdateMatrix = action._updateMatrix;
-                action._updateMatrix = function (time) {
-                  originalUpdateMatrix.call(this, time);
-                  var brainInside =
-                    animatedModel.object3D.getObjectByName("BrainInside");
-                  if (brainInside) {
-                    brainInside.position.y = finalY;
-                  }
-                };
-              }
 
               if (index === animations.length - 1) {
                 action.setLoop(THREE.LoopRepeat);
@@ -244,6 +237,17 @@
               totalDuration += clip.duration;
             }
           });
+
+          // Add a render loop to constantly update the band's position
+          function renderLoop() {
+            var brainInside =
+              animatedModel.object3D.getObjectByName("BrainInside");
+            if (brainInside && bandFinalPosition) {
+              brainInside.position.copy(bandFinalPosition);
+            }
+            requestAnimationFrame(renderLoop);
+          }
+          renderLoop();
 
           setTimeout(() => {
             updateDebugInfo(
