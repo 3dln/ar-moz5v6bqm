@@ -191,7 +191,7 @@
                 brainInside.position.z
               );
               updateDebugInfo(
-                "BrainInside animation completed. Starting animated-asset animations..."
+                "BrainInside animation completed. Starting all animations..."
               );
               playAllAnimationsOnAnimatedAsset();
             }
@@ -213,30 +213,17 @@
         if (mixer) {
           var animations =
             animatedModel.components["gltf-model"].model.animations;
-          var totalDuration = 0;
 
-          animations.forEach((clip, index) => {
-            setTimeout(() => {
-              updateDebugInfo(`Playing animation: ${clip.name}`);
-              var action = mixer.clipAction(clip);
-
-              if (index === animations.length - 1) {
-                action.setLoop(THREE.LoopRepeat);
-                updateDebugInfo(
-                  `Final animation "${clip.name}" set to loop infinitely.`
-                );
-              } else {
-                action.setLoop(THREE.LoopOnce);
-                action.clampWhenFinished = true;
-              }
-              action.reset();
-              action.play();
-            }, totalDuration * 1000);
-
-            if (index < animations.length - 1) {
-              totalDuration += clip.duration;
-            }
+          animations.forEach((clip) => {
+            updateDebugInfo(`Playing animation: ${clip.name}`);
+            var action = mixer.clipAction(clip);
+            action.setLoop(THREE.LoopRepeat);
+            action.clampWhenFinished = false;
+            action.reset();
+            action.play();
           });
+
+          updateDebugInfo("All animations started simultaneously.");
 
           // Add a render loop to constantly update the band's position
           function renderLoop() {
@@ -248,12 +235,6 @@
             requestAnimationFrame(renderLoop);
           }
           renderLoop();
-
-          setTimeout(() => {
-            updateDebugInfo(
-              "All animations started. Final animation looping infinitely."
-            );
-          }, totalDuration * 1000);
         } else {
           updateDebugInfo("Error: Mixer not found for animated-asset");
         }
