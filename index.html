@@ -113,7 +113,7 @@
 
         if (!el.hasAttribute("animation-mixer")) {
           el.setAttribute("animation-mixer", {
-            clip: "ArmatureAction",
+            clip: "ArmatureActions",
             loop: "once",
             clampWhenFinished: true,
           });
@@ -132,9 +132,9 @@
       function playAnimation(el) {
         var mixer = el.components["animation-mixer"].mixer;
         if (mixer) {
-          var clipAction = mixer.clipAction("ArmatureAction");
+          var clipAction = mixer.clipAction("ArmatureActions");
           if (clipAction) {
-            updateDebugInfo("Playing ArmatureAction...");
+            updateDebugInfo("Playing ArmatureActions...");
             clipAction.reset();
             clipAction.setLoop(THREE.LoopOnce);
             clipAction.clampWhenFinished = true;
@@ -147,16 +147,16 @@
                   "animation-finished",
                   animationFinishedHandler
                 );
-                if (event.detail.action._clip.name === "ArmatureAction") {
+                if (event.detail.action._clip.name === "ArmatureActions") {
                   updateDebugInfo(
-                    "ArmatureAction finished. Starting BrainInside animation..."
+                    "ArmatureActions finished. Starting BrainInside animation..."
                   );
                   animateBrainInside();
                 }
               }
             );
           } else {
-            updateDebugInfo("Error: ArmatureAction not found in the model");
+            updateDebugInfo("Error: ArmatureActions not found in the model");
           }
         } else {
           updateDebugInfo(
