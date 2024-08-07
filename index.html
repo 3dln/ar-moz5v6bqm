@@ -7,25 +7,25 @@
     <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
     <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
     <style>
-        .arjs-loader {
-          height: 100%;
-          width: 100%;
-          position: absolute;
-          top: 0;
-          left: 0;
-          background-color: rgba(0, 0, 0, 0.8);
-          z-index: 9999;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-  
-        .arjs-loader div {
-          text-align: center;
-          font-size: 1.25em;
-          color: white;
-        }
-      </style>
+      .arjs-loader {
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .arjs-loader div {
+        text-align: center;
+        font-size: 1.25em;
+        color: white;
+      }
+    </style>
   </head>
   <body style="margin: 0; overflow: hidden">
     <!-- <div class="arjs-loader">
@@ -188,7 +188,7 @@
               updateDebugInfo(
                 "BrainInside animation completed. Starting animated-asset animations..."
               );
-              playAllAnimationsOnAnimatedAsset();
+              playAllAnimationsOnAnimatedAsset(brainInside.position.y);
             }
           }
 
@@ -197,8 +197,7 @@
           updateDebugInfo("Error: BrainInside object not found");
         }
       }
-
-      function playAllAnimationsOnAnimatedAsset() {
+      function playAllAnimationsOnAnimatedAsset(finalY) {
         var animatedModel = document.querySelector("#bowser-model");
         if (!animatedModel.hasAttribute("animation-mixer")) {
           animatedModel.setAttribute("animation-mixer", "");
@@ -214,8 +213,21 @@
             setTimeout(() => {
               updateDebugInfo(`Playing animation: ${clip.name}`);
               var action = mixer.clipAction(clip);
+
+              // Modify the animation to keep the BrainInside at the final Y position
+              if (clip.name.includes("BrainInside")) {
+                var originalUpdateMatrix = action._updateMatrix;
+                action._updateMatrix = function (time) {
+                  originalUpdateMatrix.call(this, time);
+                  var brainInside =
+                    animatedModel.object3D.getObjectByName("BrainInside");
+                  if (brainInside) {
+                    brainInside.position.y = finalY;
+                  }
+                };
+              }
+
               if (index === animations.length - 1) {
-                // Set the last animation to loop infinitely
                 action.setLoop(THREE.LoopRepeat);
                 updateDebugInfo(
                   `Final animation "${clip.name}" set to loop infinitely.`
@@ -242,7 +254,6 @@
           updateDebugInfo("Error: Mixer not found for animated-asset");
         }
       }
-
       function onClickHandler() {
         if (!animationSequenceStarted) {
           updateDebugInfo("Click detected. Starting animation sequence...");
