@@ -164,7 +164,6 @@
           );
         }
       }
-
       function animateBrainInside() {
         var bowserModel = document.querySelector("#bowser-model");
         var brainInside = bowserModel.object3D.getObjectByName("BrainInside");
@@ -197,6 +196,7 @@
           updateDebugInfo("Error: BrainInside object not found");
         }
       }
+
       function playAllAnimationsOnAnimatedAsset(finalY) {
         var animatedModel = document.querySelector("#bowser-model");
         if (!animatedModel.hasAttribute("animation-mixer")) {
