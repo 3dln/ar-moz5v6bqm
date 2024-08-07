@@ -94,6 +94,8 @@
       let animationSequenceStarted = false;
       const isProduction = false;
       const DEBUG = !isProduction;
+      let bandFinalPosition;
+      let bandAnimation;
 
       function updateDebugInfo(message) {
         document.getElementById("debugInfo").innerHTML += message + "<br>";
@@ -104,32 +106,64 @@
         animationSequenceStarted = true;
 
         updateDebugInfo("Starting animation sequence...");
-        var el = document.querySelector("#static-model");
+        var staticModel = document.querySelector("#static-model");
+        var animatedModel = document.querySelector("#bowser-model");
 
-        if (!el) {
-          updateDebugInfo("Error: #static-model not found");
+        if (!staticModel || !animatedModel) {
+          updateDebugInfo("Error: Models not found");
           return;
         }
 
-        if (!el.hasAttribute("animation-mixer")) {
-          el.setAttribute("animation-mixer", {
+        // Start the "Band" animation immediately
+        startBandAnimation(animatedModel);
+
+        if (!staticModel.hasAttribute("animation-mixer")) {
+          staticModel.setAttribute("animation-mixer", {
             clip: "ArmatureAction",
             loop: "once",
             clampWhenFinished: true,
           });
         }
 
-        el.addEventListener("model-loaded", function modelLoadedHandler() {
-          el.removeEventListener("model-loaded", modelLoadedHandler);
-          playAnimation(el);
-        });
+        staticModel.addEventListener(
+          "model-loaded",
+          function modelLoadedHandler() {
+            staticModel.removeEventListener("model-loaded", modelLoadedHandler);
+            playHeadOpeningAnimation(staticModel);
+          }
+        );
 
-        if (el.components["gltf-model"].model) {
-          playAnimation(el);
+        if (staticModel.components["gltf-model"].model) {
+          playHeadOpeningAnimation(staticModel);
         }
       }
 
-      function playAnimation(el) {
+      function startBandAnimation(animatedModel) {
+        if (!animatedModel.hasAttribute("animation-mixer")) {
+          animatedModel.setAttribute("animation-mixer", "");
+        }
+
+        var mixer = animatedModel.components["animation-mixer"].mixer;
+        if (mixer) {
+          var animations =
+            animatedModel.components["gltf-model"].model.animations;
+          bandAnimation = animations.find((clip) => clip.name === "Band");
+
+          if (bandAnimation) {
+            updateDebugInfo("Starting Band animation...");
+            var action = mixer.clipAction(bandAnimation);
+            action.setLoop(THREE.LoopRepeat);
+            action.clampWhenFinished = false;
+            action.reset();
+            action.play();
+          } else {
+            updateDebugInfo("Error: Band animation not found");
+          }
+        } else {
+          updateDebugInfo("Error: Mixer not found for animated-asset");
+        }
+      }
+      function playHeadOpeningAnimation(el) {
         var mixer = el.components["animation-mixer"].mixer;
         if (mixer) {
           var clipAction = mixer.clipAction("ArmatureAction");
@@ -164,7 +198,79 @@
           );
         }
       }
-      let bandFinalPosition;
+
+      function animateBrainInside() {
+        var bowserModel = document.querySelector("#bowser-model");
+        var brainInside = bowserModel.object3D.getObjectByName("BrainInside");
+
+        if (brainInside) {
+          updateDebugInfo("Animating BrainInside...");
+          var initialY = brainInside.position.y;
+          var startTime = Date.now();
+          var duration = 1000;
+          var animationDistance = 0.1;
+
+          function animateUp() {
+            var now = Date.now();
+            var progress = (now - startTime) / duration;
+
+            if (progress < 1) {
+              brainInside.position.y = initialY + progress * animationDistance;
+              requestAnimationFrame(animateUp);
+            } else {
+              bandFinalPosition = new THREE.Vector3(
+                brainInside.position.x,
+                initialY + animationDistance,
+                brainInside.position.z
+              );
+              updateDebugInfo(
+                "BrainInside animation completed. Starting remaining animations..."
+              );
+              playRemainingAnimations();
+            }
+          }
+
+          animateUp();
+        } else {
+          updateDebugInfo("Error: BrainInside object not found");
+        }
+      }
+
+      function playRemainingAnimations() {
+        var animatedModel = document.querySelector("#bowser-model");
+        var mixer = animatedModel.components["animation-mixer"].mixer;
+        if (mixer) {
+          var animations =
+            animatedModel.components["gltf-model"].model.animations;
+
+          animations.forEach((clip) => {
+            if (clip.name !== "Band") {
+              // Skip the Band animation as it's already playing
+              updateDebugInfo(`Playing animation: ${clip.name}`);
+              var action = mixer.clipAction(clip);
+              action.setLoop(THREE.LoopRepeat);
+              action.clampWhenFinished = false;
+              action.reset();
+              action.play();
+            }
+          });
+
+          updateDebugInfo("All remaining animations started simultaneously.");
+
+          // Add a render loop to constantly update the band's position
+          function renderLoop() {
+            var brainInside =
+              animatedModel.object3D.getObjectByName("BrainInside");
+            if (brainInside && bandFinalPosition) {
+              brainInside.position.copy(bandFinalPosition);
+            }
+            requestAnimationFrame(renderLoop);
+          }
+          renderLoop();
+        } else {
+          updateDebugInfo("Error: Mixer not found for animated-asset");
+        }
+      }
 
       function animateBrainInside() {
         var bowserModel = document.querySelector("#bowser-model");
