@@ -20,6 +20,14 @@
     </style>
 
     <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const unwantedElement = document.querySelector(
+          'div[style*="Visit"][style*="our licensing page"]'
+        );
+        if (unwantedElement) {
+          unwantedElement.remove();
+        }
+      });
       // Only show our content when the image becomes visible
       AFRAME.registerComponent("visibility-changer", {
         init: function () {
@@ -52,7 +60,13 @@
     <body>
       <a-scene>
         <!-- Ask user for camera permissions, display some text if permission is denied -->
-        <a-entity zappar-permissions-ui id="permissions"></a-entity>
+        <a-entity zappar-permissions-ui id="permissions">
+          <!-- Remove the text entity to use Zappar's default permission denied UI -->
+          <a-entity
+            text="value: Please reload the page, accepting the camera permissions."
+            position="0 0 -2"
+          ></a-entity>
+        </a-entity>
         <!-- shows a full-page dialog that informs the user they're using an unsupported browser -->
         <a-entity zappar-compatibility-ui id="compatibility"></a-entity>
 
