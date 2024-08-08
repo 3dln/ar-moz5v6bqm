@@ -21,7 +21,25 @@
       }
     </style>
     <script>
-      // The rest of your script remains the same
+      document.addEventListener("DOMContentLoaded", () => {
+        // Function to remove the unwanted element
+        const removeUnwantedElement = () => {
+          const unwantedElement = document.querySelector(
+            'div[style*="Visit"][style*="our licensing page"]'
+          );
+          if (unwantedElement) {
+            unwantedElement.remove();
+          }
+        };
+
+        // Use MutationObserver to constantly check for changes in the DOM
+        const observer = new MutationObserver(removeUnwantedElement);
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        // Remove the unwanted element on initial load
+        removeUnwantedElement();
+      });
+
       AFRAME.registerComponent("visibility-changer", {
         init: function () {
           this.el.setAttribute("visible", false);
@@ -55,7 +73,7 @@
         ></a-entity>
       </a-entity>
       <a-entity zappar-compatibility-ui id="compatibility"></a-entity>
-      <a-camera zappar-camera="user-facing: false;">
+      <a-camera zappar-camera="user-facing: true;">
         <a-entity collider-check raycaster="objects: .collidable"></a-entity>
       </a-camera>
       <a-entity zappar-image="target: assets/marker.zpt">
@@ -69,7 +87,7 @@
             position="0 0 -0.01 "
           ></a-plane>
           <a-entity
-            rotation="0 0 0"
+            rotation="90 0 0"
             id="model"
             gltf-model="url(assets/looped.glb)"
             animation-mixer="clip: null"
