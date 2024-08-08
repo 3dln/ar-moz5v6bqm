@@ -15,29 +15,15 @@
         height: 100%;
       }
 
-      /* Initially hide the unwanted element using CSS */
-      div[style*="Visit"][style*="our licensing page"] {
-        display: none;
+      /* Initially hide any unwanted elements using a generic CSS rule */
+      body > *:not(a-scene) {
+        display: none !important;
       }
     </style>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-        // Function to hide the unwanted element
-        const hideUnwantedElement = () => {
-          const unwantedElement = document.querySelector(
-            'div[style*="Visit"][style*="our licensing page"]'
-          );
-          if (unwantedElement) {
-            unwantedElement.style.display = "none";
-          }
-        };
-
-        // Use MutationObserver to constantly check for changes in the DOM
-        const observer = new MutationObserver(hideUnwantedElement);
-        observer.observe(document.body, { childList: true, subtree: true });
-
-        // Hide the unwanted element on initial load
-        hideUnwantedElement();
+        // Show the a-scene element
+        document.querySelector("a-scene").style.display = "block";
       });
 
       AFRAME.registerComponent("visibility-changer", {
@@ -65,7 +51,7 @@
     </script>
   </head>
   <body>
-    <a-scene zappar-environment-map>
+    <a-scene zappar-environment-map style="display: none">
       <a-entity zappar-permissions-ui id="permissions">
         <a-entity
           text="value: Please reload the page, accepting the camera permissions."
@@ -73,7 +59,7 @@
         ></a-entity>
       </a-entity>
       <a-entity zappar-compatibility-ui id="compatibility"></a-entity>
-      <a-camera zappar-camera>
+      <a-camera zappar-camera="user-facing: true;">
         <a-entity collider-check raycaster="objects: .collidable"></a-entity>
       </a-camera>
       <a-entity zappar-image="target: assets/marker.zpt">
@@ -87,7 +73,7 @@
             position="0 0 -0.01 "
           ></a-plane>
           <a-entity
-            rotation="0 0 0"
+            rotation="90 0 0"
             id="model"
             gltf-model="url(assets/looped.glb)"
             animation-mixer="clip: null"
