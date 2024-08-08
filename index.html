@@ -58,7 +58,7 @@
 
   <body>
     <body>
-      <a-scene>
+      <a-scene zappar-environment-map>
         <!-- Ask user for camera permissions, display some text if permission is denied -->
         <a-entity zappar-permissions-ui id="permissions">
           <!-- Remove the text entity to use Zappar's default permission denied UI -->
@@ -70,7 +70,7 @@
         <!-- shows a full-page dialog that informs the user they're using an unsupported browser -->
         <a-entity zappar-compatibility-ui id="compatibility"></a-entity>
 
-        <a-camera zappar-camera>
+        <a-camera zappar-camera="user-facing: true;">
           <!-- Inside our camera, include a raycaster that looks down the center of the camera -->
           <!-- Use our 'collider-check' component to register the event handler -->
           <a-entity collider-check raycaster="objects: .collidable"></a-entity>
