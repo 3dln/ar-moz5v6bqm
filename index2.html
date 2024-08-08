@@ -14,7 +14,6 @@
         width: 100%;
         height: 100%;
       }
-
       /* Initially hide any unwanted elements using a generic CSS rule */
       body > *:not(a-scene) {
         display: none !important;
@@ -39,13 +38,69 @@
         dependencies: ["raycaster"],
         init: function () {
           this.el.addEventListener("raycaster-intersection", function () {
-            const model = document.getElementById("model");
+            const model = document.getElementById("model-group");
             model.setAttribute("animation-mixer", "clip:null");
             model.setAttribute(
               "animation-mixer",
               "clip: Armature|mixamo.com|Layer0; repetitions : 1"
             );
           });
+        },
+      });
+
+      AFRAME.registerComponent("interactive-model", {
+        init: function () {
+          this.el.addEventListener("click", this.handleClick.bind(this));
+          this.el.addEventListener("touchstart", this.handleClick.bind(this));
+          this.el.addEventListener(
+            "mousedown",
+            this.handleMousedown.bind(this)
+          );
+          this.el.addEventListener("mouseup", this.handleMouseup.bind(this));
+          this.el.addEventListener(
+            "mousemove",
+            this.handleMousemove.bind(this)
+          );
+          this.isDragging = false;
+          this.previousMousePosition = {
+            x: 0,
+            y: 0,
+          };
+        },
+        handleClick: function () {
+          this.el.setAttribute("animation-mixer", "clip:null");
+          this.el.setAttribute(
+            "animation-mixer",
+            "clip: Armature|mixamo.com|Layer0; repetitions : 1"
+          );
+        },
+        handleMousedown: function (event) {
+          this.isDragging = true;
+          this.previousMousePosition = {
+            x: event.clientX,
+            y: event.clientY,
+          };
+        },
+        handleMouseup: function () {
+          this.isDragging = false;
+        },
+        handleMousemove: function (event) {
+          if (!this.isDragging) {
+            return;
+          }
+
+          const deltaMove = {
+            x: event.clientX - this.previousMousePosition.x,
+            y: event.clientX - this.previousMousePosition.y,
+          };
+
+          this.previousMousePosition = {
+            x: event.clientX,
+            y: event.clientY,
+          };
+
+          this.el.object3D.rotation.y += deltaMove.x * 0.01;
+          this.el.object3D.rotation.x += deltaMove.y * 0.01;
         },
       });
     </script>
@@ -67,26 +122,31 @@
           <a-plane
             class="collidable"
             color="#000000"
-            material="transparent: true; opacity: 0.8;"
+            material="transparent: true; opacity: 0;"
             width="1"
             height="1"
             position="0 0 -0.01 "
           ></a-plane>
           <a-entity
             rotation="0 0 0"
-            scale="0.3 0.3 0.3"
-            id="model"
-            gltf-model="url(assets/looped.glb)"
-            animation-mixer
-          ></a-entity>
-          <a-entity
-            rotation="0 0 0"
-            scale="0.3 0.3 0.3"
-            id="secondary-model"
-            gltf-model="url(assets/head.glb)"
-            animation-mixer
-            position="0 0 0"
-          ></a-entity>
+            scale="0.5 0.5 0.5"
+            id="model-group"
+            interactive-model
+          >
+            <a-entity
+              rotation="0 0 0"
+              id="main-model"
+              gltf-model="url(assets/looped.glb)"
+              animation-mixer
+            ></a-entity>
+            <a-entity
+              rotation="0 0 0"
+              id="secondary-model"
+              gltf-model="url(assets/head.glb)"
+              animation-mixer
+              position="0 0 0"
+            ></a-entity>
+          </a-entity>
         </a-entity>
       </a-entity>
     </a-scene>
