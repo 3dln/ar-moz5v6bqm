@@ -96,6 +96,7 @@
       const DEBUG = !isProduction;
       let bandFinalPosition;
       let bandAnimation;
+      let loadedModels = 0;
 
       function updateDebugInfo(message) {
         document.getElementById("debugInfo").innerHTML += message + "<br>";
@@ -346,6 +347,10 @@
         }
       }
       function onClickHandler() {
+        if (loadedModels < 2) {
+          updateDebugInfo("Not all models loaded. Please wait...");
+          return;
+        }
         if (!animationSequenceStarted) {
           updateDebugInfo("Click detected. Starting animation sequence...");
           addAnimationAndPlay();
@@ -355,10 +360,14 @@
 
       document.addEventListener("click", onClickHandler);
 
+      updateDebugInfo("Ready");
+      updateDebugInfo("Loading models...");
+
       document
         .querySelector("#static-model")
         .addEventListener("model-loaded", function modelLoadedHandler() {
           updateDebugInfo("Static model loaded");
+          loadedModels += 1;
           this.removeEventListener("model-loaded", modelLoadedHandler);
         });
 
@@ -366,6 +375,7 @@
         .querySelector("#bowser-model")
         .addEventListener("model-loaded", function modelLoadedHandler() {
           updateDebugInfo("Animated model loaded");
+          loadedModels += 1;
           this.removeEventListener("model-loaded", modelLoadedHandler);
         });
     </script>
