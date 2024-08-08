@@ -15,29 +15,29 @@
         height: 100%;
       }
 
-      /* Hide the unwanted element using CSS */
+      /* Initially hide the unwanted element using CSS */
       div[style*="Visit"][style*="our licensing page"] {
-        display: none !important;
+        display: none;
       }
     </style>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-        // Function to remove the unwanted element
-        const removeUnwantedElement = () => {
+        // Function to hide the unwanted element
+        const hideUnwantedElement = () => {
           const unwantedElement = document.querySelector(
             'div[style*="Visit"][style*="our licensing page"]'
           );
           if (unwantedElement) {
-            unwantedElement.remove();
+            unwantedElement.style.display = "none";
           }
         };
 
         // Use MutationObserver to constantly check for changes in the DOM
-        const observer = new MutationObserver(removeUnwantedElement);
+        const observer = new MutationObserver(hideUnwantedElement);
         observer.observe(document.body, { childList: true, subtree: true });
 
-        // Remove the unwanted element on initial load
-        removeUnwantedElement();
+        // Hide the unwanted element on initial load
+        hideUnwantedElement();
       });
 
       AFRAME.registerComponent("visibility-changer", {
@@ -87,7 +87,7 @@
             position="0 0 -0.01 "
           ></a-plane>
           <a-entity
-            rotation="90 0 0"
+            rotation="0 0 0"
             id="model"
             gltf-model="url(assets/looped.glb)"
             animation-mixer="clip: null"
