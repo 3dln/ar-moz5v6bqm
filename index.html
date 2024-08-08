@@ -7,47 +7,6 @@
   </head>
   <body>
     <a-scene>
-      <!-- Ask user for camera permissions, display some text if permission is denied -->
-      <a-entity zappar-permissions-ui id="permissions"></a-entity>
-      <!-- shows a full-page dialog that informs the user they're using an unsupported browser -->
-      <a-entity zappar-compatibility-ui id="compatibility"></a-entity>
-
-      <a-camera zappar-camera>
-        <!-- Inside our camera, include a raycaster that looks down the center of the camera -->
-        <a-entity collider-check raycaster="objects: .collidable"></a-entity>
-      </a-camera>
-
-      <a-entity zappar-image="target: assets/marker.zpt">
-        <!-- Have a group that will only become visible when the target image comes into view -->
-        <a-entity visibility-changer>
-          <!-- Have a hotspot plane that can be detected by the raycaster -->
-          <a-plane
-            class="collidable"
-            color="#000000"
-            material="transparent: true; opacity: 0.8;"
-            width="1"
-            height="1"
-            position="0 0 -0.01 "
-          ></a-plane>
-
-          <!-- Include the static and animated models -->
-          <a-entity
-            id="static-model"
-            scale="0.3 0.3 0.3"
-            gltf-model="#static-asset"
-            class="clickable"
-            animation-mixer
-          ></a-entity>
-          <a-entity
-            id="bowser-model"
-            scale="0.3 0.3 0.3"
-            gltf-model="#animated-asset"
-            class="clickable"
-            animation-mixer
-          ></a-entity>
-        </a-entity>
-      </a-entity>
-
       <a-assets>
         <a-asset-item
           id="animated-asset"
@@ -56,6 +15,46 @@
         <a-asset-item id="static-asset" src="assets/head.glb"></a-asset-item>
       </a-assets>
     </a-scene>
+    <!-- Ask user for camera permissions, display some text if permission is denied -->
+    <a-entity zappar-permissions-ui id="permissions"></a-entity>
+    <!-- shows a full-page dialog that informs the user they're using an unsupported browser -->
+    <a-entity zappar-compatibility-ui id="compatibility"></a-entity>
+
+    <a-camera zappar-camera>
+      <!-- Inside our camera, include a raycaster that looks down the center of the camera -->
+      <a-entity collider-check raycaster="objects: .collidable"></a-entity>
+    </a-camera>
+
+    <a-entity zappar-image="target: assets/marker.zpt">
+      <!-- Have a group that will only become visible when the target image comes into view -->
+      <a-entity visibility-changer>
+        <!-- Have a hotspot plane that can be detected by the raycaster -->
+        <a-plane
+          class="collidable"
+          color="#000000"
+          material="transparent: true; opacity: 0.8;"
+          width="1"
+          height="1"
+          position="0 0 -0.01 "
+        ></a-plane>
+
+        <!-- Include the static and animated models -->
+        <a-entity
+          id="static-model"
+          scale="0.3 0.3 0.3"
+          gltf-model="#static-asset"
+          class="clickable"
+          animation-mixer
+        ></a-entity>
+        <a-entity
+          id="bowser-model"
+          scale="0.3 0.3 0.3"
+          gltf-model="#animated-asset"
+          class="clickable"
+          animation-mixer
+        ></a-entity>
+      </a-entity>
+    </a-entity>
 
     <script>
       let animationSequenceStarted = false;
