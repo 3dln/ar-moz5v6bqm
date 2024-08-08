@@ -3,7 +3,12 @@
   <head>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://libs.zappar.com/zappar-aframe/2.0.0/zappar-aframe.js"></script>
+
+    <!-- We need A-Frame Extras to run animations -->
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.0/dist/aframe-extras.min.js"></script>
+
+    <meta charset="utf-8" />
+    <title>Zappar for A-Frame: Play Animation From Gaze Example</title>
     <style>
       html,
       body {
@@ -13,69 +18,8 @@
         height: 100%;
       }
     </style>
-  </head>
-  <body>
-    <a-scene zappar-environment-map>
-      <a-assets>
-        <a-asset-item
-          id="animated-asset"
-          src="assets/looped.glb"
-        ></a-asset-item>
-        <a-asset-item id="static-asset" src="assets/head.glb"></a-asset-item>
-      </a-assets>
-    </a-scene>
-    <!-- Ask user for camera permissions, display some text if permission is denied -->
-    <a-entity zappar-permissions-ui id="permissions">
-      <!-- Remove the text entity to use Zappar's default permission denied UI -->
-      <a-entity
-        text="value: Please reload the page, accepting the camera permissions."
-        position="0 0 -2"
-      ></a-entity>
-    </a-entity>
-    <!-- shows a full-page dialog that informs the user they're using an unsupported browser -->
-    <a-entity zappar-compatibility-ui id="compatibility"></a-entity>
-
-    <a-camera zappar-camera="user-facing: true;">
-      <!-- Inside our camera, include a raycaster that looks down the center of the camera -->
-      <a-entity collider-check raycaster="objects: .collidable"></a-entity>
-    </a-camera>
-
-    <a-entity zappar-image="target: assets/target.zpt">
-      <!-- Have a group that will only become visible when the target image comes into view -->
-      <a-entity visibility-changer>
-        <!-- Have a hotspot plane that can be detected by the raycaster -->
-        <a-plane
-          class="collidable"
-          color="#000000"
-          material="transparent: true; opacity: 0.8;"
-          width="1"
-          height="1"
-          position="0 0 -0.01 "
-        ></a-plane>
-
-        <!-- Include the static and animated models -->
-        <a-entity
-          id="static-model"
-          scale="0.3 0.3 0.3"
-          gltf-model="#static-asset"
-          class="clickable"
-          animation-mixer
-        ></a-entity>
-        <a-entity
-          id="bowser-model"
-          scale="0.3 0.3 0.3"
-          gltf-model="#animated-asset"
-          class="clickable"
-          animation-mixer
-        ></a-entity>
-      </a-entity>
-    </a-entity>
 
     <script>
-      let animationSequenceStarted = false;
-      let bandFinalPosition;
-      let bandAnimation;
-
       // Only show our content when the image becomes visible
       AFRAME.registerComponent("visibility-changer", {
         init: function () {
@@ -90,165 +34,57 @@
       AFRAME.registerComponent("collider-check", {
         dependencies: ["raycaster"],
         init: function () {
-          this.el.addEventListener("raycaster-intersection", () => {
-            // When the object is detected, start the animation sequence
-            if (!animationSequenceStarted) {
-              console.log("Click detected. Starting animation sequence...");
-              addAnimationAndPlay();
-              this.el.removeEventListener(
-                "raycaster-intersection",
-                this.intersectionHandler
-              );
-            }
+          this.el.addEventListener("raycaster-intersection", function () {
+            // When the object is detected, play the animation
+            const model = document.getElementById("model");
+            model.setAttribute("animation-mixer", "clip:null");
+            model.setAttribute(
+              "animation-mixer",
+              "clip: Armature|mixamo.com|Layer0; repetitions : 1"
+            );
           });
         },
       });
-
-      function addAnimationAndPlay() {
-        if (animationSequenceStarted) return;
-        animationSequenceStarted = true;
-
-        console.log("Starting animation sequence...");
-        const staticModel = document.querySelector("#static-model");
-        const animatedModel = document.querySelector("#bowser-model");
-
-        if (!staticModel || !animatedModel) {
-          console.log("Error: Models not found");
-          return;
-        }
-
-        startBandAnimation(animatedModel);
-        playHeadOpeningAnimation(staticModel);
-      }
-
-      function startBandAnimation(animatedModel) {
-        const mixer = animatedModel.components["animation-mixer"].mixer;
-        if (mixer) {
-          const animations =
-            animatedModel.components["gltf-model"].model.animations;
-          bandAnimation = animations.find((clip) => clip.name === "Band");
-
-          if (bandAnimation) {
-            console.log("Starting Band animation...");
-            const action = mixer.clipAction(bandAnimation);
-            action.setLoop(THREE.LoopRepeat);
-            action.clampWhenFinished = false;
-            action.reset();
-            action.play();
-          } else {
-            console.log("Error: Band animation not found");
-          }
-        } else {
-          console.log("Error: Mixer not found for animated-asset");
-        }
-      }
-
-      function playHeadOpeningAnimation(el) {
-        const mixer = el.components["animation-mixer"].mixer;
-        if (mixer) {
-          const clipAction = mixer.clipAction("ArmatureAction");
-          if (clipAction) {
-            console.log("Playing ArmatureAction...");
-            clipAction.reset();
-            clipAction.setLoop(THREE.LoopOnce);
-            clipAction.clampWhenFinished = true;
-            clipAction.play();
-
-            el.addEventListener(
-              "animation-finished",
-              function animationFinishedHandler(event) {
-                el.removeEventListener(
-                  "animation-finished",
-                  animationFinishedHandler
-                );
-                if (event.detail.action._clip.name === "ArmatureAction") {
-                  console.log(
-                    "ArmatureAction finished. Starting BrainInside animation..."
-                  );
-                  animateBrainInside();
-                }
-              }
-            );
-          } else {
-            console.log("Error: ArmatureAction not found in the model");
-          }
-        } else {
-          console.log("Error: Mixer not found in animation-mixer component");
-        }
-      }
-
-      function animateBrainInside() {
-        const bowserModel = document.querySelector("#bowser-model");
-        const brainInside = bowserModel.object3D.getObjectByName("BrainInside");
-
-        if (brainInside) {
-          console.log("Animating BrainInside...");
-          const initialY = brainInside.position.y;
-          const startTime = Date.now();
-          const duration = 1000;
-          const animationDistance = 0.1;
-
-          function animateUp() {
-            const now = Date.now();
-            const progress = (now - startTime) / duration;
-
-            if (progress < 1) {
-              brainInside.position.y = initialY + progress * animationDistance;
-              requestAnimationFrame(animateUp);
-            } else {
-              bandFinalPosition = new THREE.Vector3(
-                brainInside.position.x,
-                initialY + animationDistance,
-                brainInside.position.z
-              );
-              console.log(
-                "BrainInside animation completed. Starting remaining animations..."
-              );
-              playRemainingAnimations();
-            }
-          }
-
-          animateUp();
-        } else {
-          console.log("Error: BrainInside object not found");
-        }
-      }
-
-      function playRemainingAnimations() {
-        const animatedModel = document.querySelector("#bowser-model");
-        const mixer = animatedModel.components["animation-mixer"].mixer;
-        if (mixer) {
-          const animations =
-            animatedModel.components["gltf-model"].model.animations;
-
-          animations.forEach((clip) => {
-            if (clip.name !== "Band") {
-              // Skip the Band animation as it's already playing
-              console.log(`Playing animation: ${clip.name}`);
-              const action = mixer.clipAction(clip);
-              action.setLoop(THREE.LoopRepeat);
-              action.clampWhenFinished = false;
-              action.reset();
-              action.play();
-            }
-          });
-
-          console.log("All remaining animations started simultaneously.");
-
-          // Add a render loop to constantly update the band's position
-          function renderLoop() {
-            const brainInside =
-              animatedModel.object3D.getObjectByName("BrainInside");
-            if (brainInside && bandFinalPosition) {
-              brainInside.position.copy(bandFinalPosition);
-            }
-            requestAnimationFrame(renderLoop);
-          }
-          renderLoop();
-        } else {
-          console.log("Error: Mixer not found for animated-asset");
-        }
-      }
     </script>
+  </head>
+
+  <body>
+    <body>
+      <a-scene>
+        <!-- Ask user for camera permissions, display some text if permission is denied -->
+        <a-entity zappar-permissions-ui id="permissions"></a-entity>
+        <!-- shows a full-page dialog that informs the user they're using an unsupported browser -->
+        <a-entity zappar-compatibility-ui id="compatibility"></a-entity>
+
+        <a-camera zappar-camera>
+          <!-- Inside our camera, include a raycaster that looks down the center of the camera -->
+          <!-- Use our 'collider-check' component to register the event handler -->
+          <a-entity collider-check raycaster="objects: .collidable"></a-entity>
+        </a-camera>
+
+        <a-entity zappar-image="target: assets/target.zpt">
+          <!-- Have a group that will only become visible when the target image comes into view-->
+          <a-entity visibility-changer>
+            <!-- Have a hotspot plane that can be detected by the raycaster -->
+            <a-plane
+              class="collidable"
+              color="#000000"
+              material="transparent: true; opacity: 0.8;"
+              width="1"
+              height="1"
+              position="0 0 -0.01 "
+            ></a-plane>
+
+            <!-- Include our 3D model-->
+            <a-entity
+              rotation="90 0 0"
+              id="model"
+              gltf-model="url(assets/waving.glb)"
+              animation-mixer="clip: null"
+            ></a-entity>
+          </a-entity>
+        </a-entity>
+      </a-scene>
+    </body>
   </body>
 </html>
