@@ -3,10 +3,7 @@
   <head>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://libs.zappar.com/zappar-aframe/2.0.0/zappar-aframe.js"></script>
-
-    <!-- We need A-Frame Extras to run animations -->
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.0/dist/aframe-extras.min.js"></script>
-
     <meta charset="utf-8" />
     <title></title>
     <style>
@@ -17,18 +14,14 @@
         width: 100%;
         height: 100%;
       }
-    </style>
 
+      /* Hide the unwanted element using CSS */
+      div[style*="Visit"][style*="our licensing page"] {
+        display: none !important;
+      }
+    </style>
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const unwantedElement = document.querySelector(
-          'div[style*="Visit"][style*="our licensing page"]'
-        );
-        if (unwantedElement) {
-          unwantedElement.remove();
-        }
-      });
-      // Only show our content when the image becomes visible
+      // The rest of your script remains the same
       AFRAME.registerComponent("visibility-changer", {
         init: function () {
           this.el.setAttribute("visible", false);
@@ -38,12 +31,10 @@
         },
       });
 
-      // Register a component that will register an event listener for when our raycaster detects an object
       AFRAME.registerComponent("collider-check", {
         dependencies: ["raycaster"],
         init: function () {
           this.el.addEventListener("raycaster-intersection", function () {
-            // When the object is detected, play the animation
             const model = document.getElementById("model");
             model.setAttribute("animation-mixer", "clip:null");
             model.setAttribute(
@@ -55,50 +46,36 @@
       });
     </script>
   </head>
-
   <body>
-    <body>
-      <a-scene zappar-environment-map>
-        <!-- Ask user for camera permissions, display some text if permission is denied -->
-        <a-entity zappar-permissions-ui id="permissions">
-          <!-- Remove the text entity to use Zappar's default permission denied UI -->
+    <a-scene zappar-environment-map>
+      <a-entity zappar-permissions-ui id="permissions">
+        <a-entity
+          text="value: Please reload the page, accepting the camera permissions."
+          position="0 0 -2"
+        ></a-entity>
+      </a-entity>
+      <a-entity zappar-compatibility-ui id="compatibility"></a-entity>
+      <a-camera zappar-camera="user-facing: false;">
+        <a-entity collider-check raycaster="objects: .collidable"></a-entity>
+      </a-camera>
+      <a-entity zappar-image="target: assets/marker.zpt">
+        <a-entity visibility-changer>
+          <a-plane
+            class="collidable"
+            color="#000000"
+            material="transparent: true; opacity: 0.8;"
+            width="1"
+            height="1"
+            position="0 0 -0.01 "
+          ></a-plane>
           <a-entity
-            text="value: Please reload the page, accepting the camera permissions."
-            position="0 0 -2"
+            rotation="0 0 0"
+            id="model"
+            gltf-model="url(assets/looped.glb)"
+            animation-mixer="clip: null"
           ></a-entity>
         </a-entity>
-        <!-- shows a full-page dialog that informs the user they're using an unsupported browser -->
-        <a-entity zappar-compatibility-ui id="compatibility"></a-entity>
-
-        <a-camera zappar-camera="user-facing: true;">
-          <!-- Inside our camera, include a raycaster that looks down the center of the camera -->
-          <!-- Use our 'collider-check' component to register the event handler -->
-          <a-entity collider-check raycaster="objects: .collidable"></a-entity>
-        </a-camera>
-
-        <a-entity zappar-image="target: assets/marker.zpt">
-          <!-- Have a group that will only become visible when the target image comes into view-->
-          <a-entity visibility-changer>
-            <!-- Have a hotspot plane that can be detected by the raycaster -->
-            <a-plane
-              class="collidable"
-              color="#000000"
-              material="transparent: true; opacity: 0.8;"
-              width="1"
-              height="1"
-              position="0 0 -0.01 "
-            ></a-plane>
-
-            <!-- Include our 3D model-->
-            <a-entity
-              rotation="90 0 0"
-              id="model"
-              gltf-model="url(assets/looped.glb)"
-              animation-mixer="clip: null"
-            ></a-entity>
-          </a-entity>
-        </a-entity>
-      </a-scene>
-    </body>
+      </a-entity>
+    </a-scene>
   </body>
 </html>
