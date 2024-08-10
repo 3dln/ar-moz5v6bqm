@@ -51,21 +51,17 @@
       AFRAME.registerComponent("interactive-model", {
         init: function () {
           this.el.addEventListener("click", this.handleClick.bind(this));
-          this.el.addEventListener("touchstart", this.handleClick.bind(this));
           this.el.addEventListener(
-            "mousedown",
-            this.handleMousedown.bind(this)
+            "touchstart",
+            this.handleTouchStart.bind(this)
           );
-          this.el.addEventListener("mouseup", this.handleMouseup.bind(this));
           this.el.addEventListener(
-            "mousemove",
-            this.handleMousemove.bind(this)
+            "touchmove",
+            this.handleTouchMove.bind(this)
           );
+          this.el.addEventListener("touchend", this.handleTouchEnd.bind(this));
           this.isDragging = false;
-          this.previousMousePosition = {
-            x: 0,
-            y: 0,
-          };
+          this.previousTouchPosition = { x: 0, y: 0 };
         },
         handleClick: function () {
           this.el.setAttribute("animation-mixer", "clip:null");
@@ -74,33 +70,30 @@
             "clip: Armature|mixamo.com|Layer0; repetitions : 1"
           );
         },
-        handleMousedown: function (event) {
+        handleTouchStart: function (event) {
+          event.preventDefault();
           this.isDragging = true;
-          this.previousMousePosition = {
-            x: event.clientX,
-            y: event.clientY,
-          };
+          const touch = event.touches[0];
+          this.previousTouchPosition = { x: touch.pageX, y: touch.pageY };
         },
-        handleMouseup: function () {
-          this.isDragging = false;
-        },
-        handleMousemove: function (event) {
-          if (!this.isDragging) {
-            return;
-          }
+        handleTouchMove: function (event) {
+          event.preventDefault();
+          if (!this.isDragging) return;
 
+          const touch = event.touches[0];
           const deltaMove = {
-            x: event.clientX - this.previousMousePosition.x,
-            y: event.clientX - this.previousMousePosition.y,
+            x: touch.pageX - this.previousTouchPosition.x,
+            y: touch.pageY - this.previousTouchPosition.y,
           };
 
-          this.previousMousePosition = {
-            x: event.clientX,
-            y: event.clientY,
-          };
+          this.previousTouchPosition = { x: touch.pageX, y: touch.pageY };
 
           this.el.object3D.rotation.y += deltaMove.x * 0.01;
           this.el.object3D.rotation.x += deltaMove.y * 0.01;
+        },
+        handleTouchEnd: function (event) {
+          event.preventDefault();
+          this.isDragging = false;
         },
       });
     </script>
@@ -144,7 +137,7 @@
               id="secondary-model"
               gltf-model="url(assets/head.glb)"
               animation-mixer
-              position="0 0 0"
+              position="0 0.5 0"
             ></a-entity>
           </a-entity>
         </a-entity>
