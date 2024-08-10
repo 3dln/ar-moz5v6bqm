@@ -4,6 +4,7 @@
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://libs.zappar.com/zappar-aframe/2.0.0/zappar-aframe.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.0/dist/aframe-extras.min.js"></script>
+    <script src="./model-viewer.js"></script>
     <meta charset="utf-8" />
     <title></title>
     <style>
@@ -47,66 +48,14 @@
           });
         },
       });
-
-      AFRAME.registerComponent("interactive-model", {
-        init: function () {
-          this.el.addEventListener("click", this.handleClick.bind(this));
-          this.el.addEventListener("touchstart", this.handleClick.bind(this));
-          this.el.addEventListener(
-            "mousedown",
-            this.handleMousedown.bind(this)
-          );
-          this.el.addEventListener("mouseup", this.handleMouseup.bind(this));
-          this.el.addEventListener(
-            "mousemove",
-            this.handleMousemove.bind(this)
-          );
-          this.isDragging = false;
-          this.previousMousePosition = {
-            x: 0,
-            y: 0,
-          };
-        },
-        handleClick: function () {
-          this.el.setAttribute("animation-mixer", "clip:null");
-          this.el.setAttribute(
-            "animation-mixer",
-            "clip: Armature|mixamo.com|Layer0; repetitions : 1"
-          );
-        },
-        handleMousedown: function (event) {
-          this.isDragging = true;
-          this.previousMousePosition = {
-            x: event.clientX,
-            y: event.clientY,
-          };
-        },
-        handleMouseup: function () {
-          this.isDragging = false;
-        },
-        handleMousemove: function (event) {
-          if (!this.isDragging) {
-            return;
-          }
-
-          const deltaMove = {
-            x: event.clientX - this.previousMousePosition.x,
-            y: event.clientX - this.previousMousePosition.y,
-          };
-
-          this.previousMousePosition = {
-            x: event.clientX,
-            y: event.clientY,
-          };
-
-          this.el.object3D.rotation.y += deltaMove.x * 0.01;
-          this.el.object3D.rotation.x += deltaMove.y * 0.01;
-        },
-      });
     </script>
   </head>
   <body>
-    <a-scene zappar-environment-map style="display: none">
+    <a-scene
+      model-viewer="gltfModel: #model-group; title: Torshex"
+      zappar-environment-map
+      style="display: none"
+    >
       <a-entity zappar-permissions-ui id="permissions">
         <a-entity
           text="value: Please reload the page, accepting the camera permissions."
