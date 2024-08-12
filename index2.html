@@ -47,55 +47,6 @@
           });
         },
       });
-
-      AFRAME.registerComponent("interactive-model", {
-        init: function () {
-          this.el.addEventListener("click", this.handleClick.bind(this));
-          this.el.addEventListener(
-            "touchstart",
-            this.handleTouchStart.bind(this)
-          );
-          this.el.addEventListener(
-            "touchmove",
-            this.handleTouchMove.bind(this)
-          );
-          this.el.addEventListener("touchend", this.handleTouchEnd.bind(this));
-          this.isDragging = false;
-          this.previousTouchPosition = { x: 0, y: 0 };
-        },
-        handleClick: function () {
-          this.el.setAttribute("animation-mixer", "clip:null");
-          this.el.setAttribute(
-            "animation-mixer",
-            "clip: Armature|mixamo.com|Layer0; repetitions : 1"
-          );
-        },
-        handleTouchStart: function (event) {
-          event.preventDefault();
-          this.isDragging = true;
-          const touch = event.touches[0];
-          this.previousTouchPosition = { x: touch.pageX, y: touch.pageY };
-        },
-        handleTouchMove: function (event) {
-          event.preventDefault();
-          if (!this.isDragging) return;
-
-          const touch = event.touches[0];
-          const deltaMove = {
-            x: touch.pageX - this.previousTouchPosition.x,
-            y: touch.pageY - this.previousTouchPosition.y,
-          };
-
-          this.previousTouchPosition = { x: touch.pageX, y: touch.pageY };
-
-          this.el.object3D.rotation.y += deltaMove.x * 0.01;
-          this.el.object3D.rotation.x += deltaMove.y * 0.01;
-        },
-        handleTouchEnd: function (event) {
-          event.preventDefault();
-          this.isDragging = false;
-        },
-      });
     </script>
   </head>
   <body>
@@ -124,7 +75,6 @@
             rotation="0 0 0"
             scale="0.5 0.5 0.5"
             id="model-group"
-            interactive-model
           >
             <a-entity
               rotation="0 0 0"
@@ -137,7 +87,7 @@
               id="secondary-model"
               gltf-model="url(assets/head.glb)"
               animation-mixer
-              position="0 0.5 0"
+              position="0 0 0"
             ></a-entity>
           </a-entity>
         </a-entity>
