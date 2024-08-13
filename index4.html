@@ -1,26 +1,254 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.prod.js"></script>
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/donmccurdy/aframe-extras/master/dist/aframe-extras.loaders.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        function playHeadOpeningAnimation(el) {
+          var mixer = el.components["animation-mixer"].mixer;
+          if (mixer) {
+            var clipAction = mixer.clipAction("ArmatureAction");
+            if (clipAction) {
+              console.log("Playing ArmatureAction...");
+              clipAction.reset();
+              clipAction.setLoop(THREE.LoopOnce);
+              clipAction.clampWhenFinished = true;
+              clipAction.play();
+
+              el.addEventListener(
+                "animation-finished",
+                function animationFinishedHandler(event) {
+                  el.removeEventListener(
+                    "animation-finished",
+                    animationFinishedHandler
+                  );
+                  if (event.detail.action._clip.name === "ArmatureAction") {
+                    console.log(
+                      "ArmatureAction finished. Starting BrainInside animation..."
+                    );
+                    animateBrainInside();
+                  }
+                }
+              );
+            } else {
+              console.log("Error: ArmatureAction not found in the model");
+            }
+          } else {
+            console.log("Error: Mixer not found in animation-mixer component");
+          }
+        }
+
+        function playAllAnimationsOnAnimatedAsset() {
+          var animatedModel = document.querySelector("#bowser-model");
+          if (!animatedModel.hasAttribute("animation-mixer")) {
+            animatedModel.setAttribute("animation-mixer", "");
+          }
+
+          var mixer = animatedModel.components["animation-mixer"].mixer;
+          if (mixer) {
+            var animations =
+              animatedModel.components["gltf-model"].model.animations;
+
+            animations.forEach((clip) => {
+              console.log(`Playing animation: ${clip.name}`);
+              var action = mixer.clipAction(clip);
+              action.setLoop(THREE.LoopRepeat);
+              action.clampWhenFinished = false;
+              action.reset();
+              action.play();
+            });
+
+            console.log("All animations started simultaneously.");
+
+            // Add a render loop to constantly update the band's position
+            function renderLoop() {
+              var brainInside =
+                animatedModel.object3D.getObjectByName("BrainInside");
+              if (brainInside && bandFinalPosition) {
+                brainInside.position.copy(bandFinalPosition);
+              }
+              requestAnimationFrame(renderLoop);
+            }
+            renderLoop();
+          } else {
+            console.log("Error: Mixer not found for animated-asset");
+          }
+        }
+
+        function animateBrainInside() {
+          var bowserModel = document.querySelector("#bowser-model");
+          var brainInside = bowserModel.object3D.getObjectByName("BrainInside");
+
+          if (brainInside) {
+            console.log("Animating BrainInside...");
+            var initialY = brainInside.position.y;
+            var startTime = Date.now();
+            var duration = 1000;
+            var animationDistance = 0.1;
+
+            function animateUp() {
+              console.log("Moving it up...");
+              var now = Date.now();
+              var progress = (now - startTime) / duration;
+
+              if (progress < 1) {
+                brainInside.position.y =
+                  initialY + progress * animationDistance;
+                requestAnimationFrame(animateUp);
+              } else {
+                bandFinalPosition = new THREE.Vector3(
+                  brainInside.position.x,
+                  initialY + animationDistance,
+                  brainInside.position.z
+                );
+                console.log(
+                  "BrainInside animation completed. Starting all animations..."
+                );
+                playAllAnimationsOnAnimatedAsset();
+              }
+            }
+
+            animateUp();
+          } else {
+            console.log("Error: BrainInside object not found");
+          }
+        }
+        function addAnimationAndPlay() {
+          console.log("Starting animations");
+          var staticModel = document.querySelector("#static-model");
+          var animatedModel = document.querySelector("#bowser-model");
+
+          if (!staticModel || !animatedModel) {
+            console.log("Error: Models not found");
+            return;
+          }
+
+          startBandAnimation(animatedModel);
+
+          if (!staticModel.hasAttribute("animation-mixer")) {
+            console.log("Adding animation-mixer attribute");
+            staticModel.setAttribute("animation-mixer", {
+              clip: "ArmatureAction",
+              loop: "once",
+              clampWhenFinished: true,
+            });
+          }
+
+          staticModel.addEventListener(
+            "model-loaded",
+            function modelLoadedHandler() {
+              console.log("Upper Head Model loaded");
+              staticModel.removeEventListener(
+                "model-loaded",
+                modelLoadedHandler
+              );
+              playHeadOpeningAnimation(staticModel);
+            }
+          );
+
+          if (staticModel.components["gltf-model"].model) {
+            playHeadOpeningAnimation(staticModel);
+          }
+        }
+
+        function startBandAnimation(animatedModel) {
+          if (!animatedModel.hasAttribute("animation-mixer")) {
+            animatedModel.setAttribute("animation-mixer", "");
+          }
+
+          var mixer = animatedModel.components["animation-mixer"].mixer;
+          if (mixer) {
+            var animations =
+              animatedModel.components["gltf-model"].model.animations;
+            bandAnimation = animations.find((clip) => clip.name === "Band");
+
+            if (bandAnimation) {
+              console.log("Starting Band animation...");
+              var action = mixer.clipAction(bandAnimation);
+              action.setLoop(THREE.LoopRepeat);
+              action.clampWhenFinished = false;
+              action.reset();
+              action.play();
+            } else {
+              console.log("Error: Band animation not found");
+            }
+          } else {
+            console.log("Error: Mixer not found for animated-asset");
+          }
+        }
+
+        const sceneEl = document.querySelector("a-scene");
+        let arSystem;
+        sceneEl.addEventListener("loaded", function () {
+          arSystem = sceneEl.systems["mindar-image-system"];
+        });
+
+        sceneEl.addEventListener("arReady", (event) => {
+          console.log("AR is ready");
+        });
+        sceneEl.addEventListener("arError", (event) => {
+          console.log("AR failed to start");
+        });
+
+        const torshxModel = document.querySelector("#torshx");
+        torshxModel.addEventListener("targetFound", (event) => {
+          console.log("TorshX found");
+          addAnimationAndPlay();
+        });
+
+        // detect target lost
+        torshxModel.addEventListener("targetLost", (event) => {
+          console.log("TorshX lost");
+        });
+      });
+    </script>
   </head>
   <body>
     <a-scene
-      mindar-image="imageTargetSrc: ./targets.mind;"
+      mindar-image="imageTargetSrc: ./targets.mind; warmupTolerance: 1; missTolerance: 1;filterMinCF:0.1; filterBeta: 10;"
+      color-space="sRGB"
+      renderer="colorManagement: true, physicallyCorrectLights"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false"
     >
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-      <a-entity mindar-image-target="targetIndex: 0">
-        <a-plane
-          color="blue"
-          opaciy="0.5"
+      <a-assets>
+        <a-asset-item
+          id="animated-asset"
+          src="assets/looped.glb"
+        ></a-asset-item>
+        <a-asset-item id="static-asset" src="assets/head.glb"></a-asset-item>
+      </a-assets>
+
+      <a-camera
+        position="0 0 0"
+        look-controls="enabled: false"
+        cursor="fuse: false; rayOrigin: mouse;"
+        raycaster="far: ${customFields.libVersion}; objects: .clickable"
+      ></a-camera>
+
+      <a-entity id="torshx" mindar-image-target="targetIndex: 0">
+        <!-- <a-plane src="#card" position="0 0 0" height="0.552" width="1" rotation="0 0 0"></a-plane> -->
+        <!-- <a-gltf-model rotation="0 0 0 " position="0 0 0.1" scale="0.005 0.005 0.005" src="#avatarModel" animation="property: position; to: 0 0.1 0.1; dur: 1000; easing: easeInOutQuad; loop: true; dir: alternate"> -->
+        <a-entity
+          id="static-model"
+          scale="0.3 0.3 0.3"
+          gltf-model="#static-asset"
+          class="clickable"
+          gesture-handler
           position="0 0 0"
-          height="1"
-          width="1"
           rotation="0 0 0"
-        ></a-plane>
+        ></a-entity>
+        <a-entity
+          id="bowser-model"
+          scale="0.3 0.3 0.3"
+          gltf-model="#animated-asset"
+          class="clickable"
+          gesture-handler
+          position="0 0 0"
+          rotation="0 0 0"
+        ></a-entity>
       </a-entity>
     </a-scene>
   </body>
