@@ -1,95 +1,56 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://libs.zappar.com/zappar-aframe/2.0.0/zappar-aframe.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.0/dist/aframe-extras.min.js"></script>
-    <meta charset="utf-8" />
-    <title></title>
-    <style>
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-      }
-      /* Initially hide any unwanted elements using a generic CSS rule */
-      body > *:not(a-scene) {
-        display: none !important;
-      }
-    </style>
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        // Show the a-scene element
-        document.querySelector("a-scene").style.display = "block";
-      });
-
-      AFRAME.registerComponent("visibility-changer", {
-        init: function () {
-          this.el.setAttribute("visible", false);
-          this.el.sceneEl.addEventListener("zappar-visible", () =>
-            this.el.setAttribute("visible", true)
-          );
-        },
-      });
-
-      AFRAME.registerComponent("collider-check", {
-        dependencies: ["raycaster"],
-        init: function () {
-          this.el.addEventListener("raycaster-intersection", function () {
-            const model = document.getElementById("model-group");
-            model.setAttribute("animation-mixer", "clip:null");
-            model.setAttribute(
-              "animation-mixer",
-              "clip: Armature|mixamo.com|Layer0; repetitions : 1"
-            );
-          });
-        },
-      });
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/donmccurdy/aframe-extras/master/dist/aframe-extras.loaders.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <script src="js/components/gesture-detector.js"></script>
+    <script src="js/components/gesture-handler.js"></script>
+    <script src="js/animation-controller.js"></script>
+    <script src="js/main.js"></script>
   </head>
   <body>
-    <a-scene zappar-environment-map style="display: none">
-      <a-entity zappar-permissions-ui id="permissions">
+    <a-scene
+      mindar-image="imageTargetSrc: ./targets.mind; warmupTolerance: 1; missTolerance: 1; filterMinCF:0.2; filterBeta: 10;"
+      color-space="sRGB"
+      gesture-detector
+      renderer="colorManagement: true, physicallyCorrectLights"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false"
+    >
+      <a-assets>
+        <a-asset-item id="animated-asset" src="assets/looped.glb"></a-asset-item>
+        <a-asset-item id="static-asset" src="assets/head.glb"></a-asset-item>
+      </a-assets>
+
+      <a-camera
+        position="0 0 0"
+        look-controls="enabled: false"
+        cursor="fuse: false; rayOrigin: mouse;"
+        raycaster="far: ${customFields.libVersion}; objects: .clickable"
+      ></a-camera>
+
+      <a-entity id="torshx" mindar-image-target="targetIndex: 0">
         <a-entity
-          text="value: Please reload the page, accepting the camera permissions."
-          position="0 0 -2"
-        ></a-entity>
-      </a-entity>
-      <a-entity zappar-compatibility-ui id="compatibility"></a-entity>
-      <a-camera zappar-camera>
-        <a-entity collider-check raycaster="objects: .collidable"></a-entity>
-      </a-camera>
-      <a-entity zappar-image="target: assets/marker.zpt">
-        <a-entity visibility-changer>
-          <a-plane
-            class="collidable"
-            color="#000000"
-            material="transparent: true; opacity: 0;"
-            width="1"
-            height="1"
-            position="0 0 -0.01 "
-          ></a-plane>
+          id="model-container"
+          gesture-handler
+        >
           <a-entity
+            id="static-model"
+            scale="0.3 0.3 0.3"
+            gltf-model="#static-asset"
+            position="0 0 0"
             rotation="0 0 0"
-            scale="0.5 0.5 0.5"
-            id="model-group"
-          >
-            <a-entity
-              rotation="0 0 0"
-              id="main-model"
-              gltf-model="url(assets/looped.glb)"
-              animation-mixer
-            ></a-entity>
-            <a-entity
-              rotation="0 0 0"
-              id="secondary-model"
-              gltf-model="url(assets/head.glb)"
-              animation-mixer
-              position="0 0 0"
-            ></a-entity>
-          </a-entity>
+          ></a-entity>
+          <a-entity
+            id="bowser-model"
+            scale="0.3 0.3 0.3"
+            gltf-model="#animated-asset"
+            position="0 0 0"
+            rotation="0 0 0"
+          ></a-entity>
         </a-entity>
       </a-entity>
     </a-scene>
